@@ -205,7 +205,7 @@ function directory_destinations() {
 }
 
 function directory_draw_entries_table_header_directory() {
-	return [ _('Name'), _('Name Announcement'), _('Dial'), _('Actions') ];
+	return [ _('Name'), _('TTS Pronunciation'), _('Name Announcement'), _('Dial'), _('Actions') ];
 }
 function add_help_msg($help_id) {
 	$help = [ _('Name') => _("This should auto-populate with the extension's descriptive name. This is what users will search by when asked to enter the first 3 letters of the person's name. For example, if the name is Bartholomew, the caller would enter 227 for BAR. This field should be a name as the search option is based on Name and not the number.") ];
@@ -257,7 +257,7 @@ function directory_draw_entries($id) {
 		$realid       = $e['type'] == 'custom' ? 'custom' : $e['foreign_id'];
 		$value        = $e['foreign_id'] . "|" . $e['foreign_name'];
 		$foreign_name = $e['foreign_name'] == '' ? 'Custom Entry' : $e['foreign_name'];
-		$html .= directory_draw_entries_tr($id, $realid, $e['name'], $foreign_name, $e['audio'], $e['dial'], $e['e_id'], false, $value);
+		$html .= directory_draw_entries_tr($id, $realid, $e['name'], $e['pronunciation'], $foreign_name, $e['audio'], $e['dial'], $e['e_id'], false, $value);
 		if ($e['type'] == 'custom') {
 			$inuse[] = $e['name'];
 		}
@@ -272,7 +272,7 @@ function directory_draw_entries($id) {
 
 //used to add row's the entry table
 
-function directory_draw_entries_tr($id, $realid, $name = '', $foreign_name = '', $audio = '', $num = '', $e_id = '', $reuse_audio = false, $dataname = null) {
+function directory_draw_entries_tr($id, $realid, $name = '', $pronunciation = '', $foreign_name = '', $audio = '', $num = '', $e_id = '', $reuse_audio = false, $dataname = null) {
 	$td = [];
 	global $amp_conf, $directory_draw_recordings_list, $audio_select;
 	if (!$directory_draw_recordings_list) {
@@ -310,9 +310,10 @@ function directory_draw_entries_tr($id, $realid, $name = '', $foreign_name = '',
 		$t2_class .= '" class = "form-control"';
 	}
 	$td[] = '<input type="hidden" readonly="readonly" name="entries[' . $e_id . '][foreign_id]" value="' . $realid . '" /><input type="text" name="entries[' . $e_id . '][name]" placeholder="' . $foreign_name . '"' . $t1_class . ' value="' . $name . '" />';
+	$td[] = '<input type="text" name="entries['.$e_id.'][pronunciation]" placeholder="TTS Pronunciation OR Blank" class="form-control" value="'.$pronunciation.'" />';
 	$td[] = $audio_select;
 	$td[] = '<input type="text" name="entries[' . $e_id . '][num]" ' . $t2_class . ' value="' . $num . '" />';
-	$opts = [ 'id' => $id, 'e_id' => $e_id, 'realid' => $realid, 'name' => $name, 'audio' => $audio, 'num' => $num ];
+	$opts = [ 'id' => $id, 'e_id' => $e_id, 'realid' => $realid, 'name' => $name, 'pronunciation' => $pronunciation, 'audio' => $audio, 'num' => $num ];
 
 	$more_td = mod_func_iterator('draw_entries_tr_directory', $opts);
 	foreach ($more_td as $mod) {
@@ -343,7 +344,7 @@ function directory_draw_entries_tr($id, $realid, $name = '', $foreign_name = '',
 function directory_draw_entries_all_users($id) {
 	$html = '';
 	foreach (core_users_list() as $user) {
-		$html .= directory_draw_entries_tr($id, $user[0], '', $user[1], 'vm', '', $id++, true);
+		$html .= directory_draw_entries_tr($id, $user[0], '', '', $user[1], 'vm', '', $id++, true);
 	}
 	return $html;
 }
