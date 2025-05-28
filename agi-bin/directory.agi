@@ -42,6 +42,12 @@ while($loopcounter1 <= $dir->dir['repeat_loops']){
 		dbug("Input recieved: ".$search);
 		$matches = $dir->search($search,1);
 		$loopcounter2++;
+
+		if (strstr($search['result'],'0') === true) {
+			$dir->$agi->exec('background',$dir->dir['invalid_recording']);
+			$dir->bail();
+			break;
+		}
 	}
 	//hangup if we failed to receive anything meanigfull
 	if($loopcounter2 == $dir->dir['repeat_loops'] && !$matches){//seem like we ran out of tries...
@@ -75,6 +81,13 @@ while($loopcounter1 <= $dir->dir['repeat_loops']){
 		}
 		// if they timeout and there are 3 or fewer matches then just play them
 		if (empty($press) && $matches <=3) {
+			break;
+		}
+
+		// if they pressed zero, exit the directory
+		if ($press == '0') {
+			$dir->$agi->exec('background',$dir->dir['invalid_recording']);
+			$dir->bail();
 			break;
 		}
 	}
@@ -119,6 +132,14 @@ while($loopcounter1 <= $dir->dir['repeat_loops']){
 			}
 		}
 
+		// if they pressed zero, exit the directory
+		if ($ret === '0') {
+			dbug("Caller pressed zero during choices");
+			$dir->agi->exec('background',$dir->dir['invalid_recording']);
+			$dir->bail();
+			break;
+		}
+
 		if(trim($ret['result']) && strpos($validkeys, trim($ret['result'])) !== false){
 			call($matches[$ret['result']-1]);
 		}
@@ -138,6 +159,7 @@ if ($loopcounter1) {
 
 function call($contact){
 	global $dir;
+	$ret = $dir->agi->wait_for_digit(500);
 	$dir->readContact($contact);
 	if($dir->dir['alert_info'] != ''){
 		$dir->agi->set_variable('ALERT_INFO',$dir->dir['alert_info']);
@@ -149,6 +171,7 @@ function call($contact){
 		$callid_name = $dir->agi->get_variable('CALLERID(name)');
 		$dir->agi->set_variable('CALLERID(name)',$dir->dir['callid_prefix'].$callid_name['data']);
 	}
+	$ret = $dir->agi->wait_for_digit(1000);
 	$dir->agi->set_variable('DIR_DIAL',$contact['dial']);
 	exit;
 }
@@ -160,7 +183,7 @@ function fastpass_get_data_multiple($agi, $filename, $timeout, $max_digits) {
 	$tmp = $tmp != '*' ? $tmp : '#'; //dont allow star turn it into a pound
 	$buffer .= $tmp;
 	$count = 0;
-	while(strlen($buffer) < $max_digits && $tmp != '#' && $count < $max_digits) {
+	while(strlen($buffer) < $max_digits && $tmp != '#' && $tmp != '0' && $count < $max_digits) {
 		$t = $agi->wait_for_digit($timeout);
 		$tmp = $t['result'] != 0 ? chr($t['result']) : "";
 		$tmp = $tmp != '*' ? $tmp : '#'; //dont allow star turn it into a pound
