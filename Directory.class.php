@@ -221,7 +221,7 @@ class Directory extends FreePBX_Helpers implements BMO {
 
 	public function updateEntries($id, $entries) {
 		$this->deleteEntriesById($id);
-		$sql  = 'INSERT INTO directory_entries (id, e_id, name,type,foreign_id,audio,dial) VALUES (:id, :e_id, :name, :type, :foriegn_id, :audio,:dial)';
+		$sql  = 'INSERT INTO directory_entries (id, e_id, name, pronunciation, type,foreign_id,audio,dial) VALUES (:id, :e_id, :name, :pronunciation, :type, :foriegn_id, :audio,:dial)';
 		$stmt = $this->Database->prepare($sql);
 		foreach ($entries as $idx => $row) {
 			if ('custom' == $row['foreign_id'] && '' == trim((string) $row['name']) || '' == $row['foreign_id']) {
@@ -238,6 +238,7 @@ class Directory extends FreePBX_Helpers implements BMO {
 				':id'         => $id,
 				':e_id'       => $idx,
 				':name'       => ($row['name'] ?? ''),
+				':pronunciation' => ($row['pronunciation'] ?? ''),
 				':type'       => $type,
 				':foriegn_id' => $foreign_id,
 				':audio'      => $audio,
