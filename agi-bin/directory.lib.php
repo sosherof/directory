@@ -166,12 +166,35 @@ class Dir {
 			//fallthough if not successfull
 			case 'tts':
 				// speak the name if possible, otherwise move on to spell it
-				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . '/tmp/directory-tts-' . time() . random_int(100, 999);
-				system('flite -t "' . escapeshellarg((string) $con['name']) . '" -o ' . $temporaryAudioFile . '.wav', $exitCode);
+				$name_hash = md5($con['pronunciation']);					//hash of the name
+				$name_no_spaces = escapeshellcmd(str_replace(' ', '', $con['name']));
+				//$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . '/tmp/directory-tts-' . time() . random_int(100, 999);
+				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}";
+				$temporaryAudioFileOld = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_*";
+				if (!file_exists($temporaryAudioFile . '.wav')) {
+					dbug("TTS making new file: {$temporaryAudioFile}");
+
+					//If wav file with matching hash does not exist, delete older/different versions
+					array_map('unlink', glob($temporaryAudioFileOld));
+					
+					//Produce a new TTS file from AWS Polly
+					exec('/usr/bin/node /opt/aws-nodejs/polly.js  --mp3="' . $temporaryAudioFile . '.mp3" --text=' . escapeshellarg($con['pronunciation']) . ' --wav=' . $temporaryAudioFile, $PollyResp, $exitCode);
+					
+					//Delete the MP3 that was produce from Polly (only keeping the WAV file)
+					if (file_exists($temporaryAudioFile . '.mp3')) {
+						unlink($temporaryAudioFile . '.mp3');
+					}					
+				} else {
+					dbug("TTS using existing file: {$temporaryAudioFile}");
+					$exitCode=0;
+				}	
+			
+				//system('flite -t "' . escapeshellarg((string) $con['name']) . '" -o ' . $temporaryAudioFile . '.wav', $exitCode);
 				if (file_exists($temporaryAudioFile . '.wav') && $exitCode === 0) {
 					$ret           = $this->agi->stream_file($temporaryAudioFile, $keys);
 					$ret['result'] = isset($ret['result']) ? chr($ret['result']) : NULL;
-					unlink($temporaryAudioFile . '.wav');
+					$ret = $ret['result']>0 ? chr($ret['result']) : null;
+					//unlink($temporaryAudioFile . '.wav');
 					break;
 				}
 				else {
@@ -245,7 +268,7 @@ class Dir {
 
 		//TODO: check db results for errors and fail gracefully
 
-		$vtable = '(SELECT DISTINCT a.audio, IF(a.name != "",a.name,b.name) name, IF(a.dial != "",a.dial,b.extension) dial FROM directory_entries a LEFT JOIN users b ON a.foreign_id = b.extension WHERE id = "' . $this->directory . '") v';
+		$vtable = '(SELECT DISTINCT a.id, a.audio, IF(a.name != "",a.name,b.name) name, IF(a.dial != "",a.dial,b.extension) dial FROM directory_entries a LEFT JOIN users b ON a.foreign_id = b.extension WHERE id = "' . $this->directory . '") v';
 		if ($count == 1) {
 			$sql = "SELECT COUNT(*) FROM $vtable WHERE name REGEXP \"(^| ){$this->searchstring}\"";
 			$res = $this->db->getOne($sql);
