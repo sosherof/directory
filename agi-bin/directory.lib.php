@@ -176,9 +176,30 @@ class Dir {
 
 					//If wav file with matching hash does not exist, delete older/different versions
 					array_map('unlink', glob($temporaryAudioFileOld));
+
+					require('/opt/aws-sdk/aws.phar');	//require the AWS SDK to use Polly
+					require('/opt/aws-sdk/cred.php');	//$awsAccessKeyId and $awsSecretKey
+
+					$credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
+					$client         = new \Aws\Polly\PollyClient([
+					    'version'     => '2016-06-10',
+					    'credentials' => $credentials,
+					    'region'      => 'us-east-1',
+					]);
+					$result         = $client->synthesizeSpeech([
+					    'OutputFormat' => 'mp3',
+					    'SampleRate'   => '8000',
+					    'Text'         => $con['pronunciation'],					
+					    'TextType'     => 'text',
+					    'VoiceId'      => 'Salli',
+					    'Engine'	   => 'neural'
+					]);
+					$resultData     = $result->get('AudioStream')->getContents();
+
+					//TODO - write output to file and convert it to WAV
 					
 					//Produce a new TTS file from AWS Polly
-					exec('/usr/bin/node /opt/aws-nodejs/polly.js  --mp3="' . $temporaryAudioFile . '.mp3" --text=' . escapeshellarg($con['pronunciation']) . ' --wav=' . $temporaryAudioFile, $PollyResp, $exitCode);
+					//exec('/usr/bin/node /opt/aws-nodejs/polly.js  --mp3="' . $temporaryAudioFile . '.mp3" --text=' . escapeshellarg($con['pronunciation']) . ' --wav=' . $temporaryAudioFile, $PollyResp, $exitCode);
 					
 					//Delete the MP3 that was produce from Polly (only keeping the WAV file)
 					if (file_exists($temporaryAudioFile . '.mp3')) {
