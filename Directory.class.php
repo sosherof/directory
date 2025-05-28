@@ -154,7 +154,7 @@ class Directory extends FreePBX_Helpers implements BMO {
 	}
 
 	public function getEntriesById($id) {
-		$sql  = "SELECT a.name, a.type, a.audio, a.dial, a.foreign_id, a.e_id, b.name foreign_name, IF(a.name != \"\",a.name,b.name) realname
+		$sql  = "SELECT a.name, a.pronunciation, a.type, a.audio, a.dial, a.foreign_id, a.e_id, b.name foreign_name, IF(a.name != \"\",a.name,b.name) realname
 		FROM directory_entries a LEFT JOIN users b ON a.foreign_id = b.extension WHERE id = :id ORDER BY realname";
 		$stmt = $this->Database->prepare($sql);
 		$stmt->execute([ ':id' => $id ]);
