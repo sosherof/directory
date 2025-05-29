@@ -49,7 +49,7 @@ class Directory extends FreePBX_Helpers implements BMO {
 							$realname = 'Custom Entry';
 							$audio    = 'tts';
 						}
-						echo directory_draw_entries_tr($opts[0], $real_id, $name, $pronunciation, $realname, $audio, '', $opts[2]);
+						echo directory_draw_entries_tr($opts[0], $real_id, $name, '', $realname, $audio, '', $opts[2]);
 					}
 					exit;
 				}
