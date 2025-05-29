@@ -305,7 +305,7 @@ class Dir {
 
 		//TODO: check db results for errors and fail gracefully
 
-		$vtable = '(SELECT DISTINCT a.id, a.audio, IF(a.name != "",a.name,b.name) name, IF(a.dial != "",a.dial,b.extension) dial FROM directory_entries a LEFT JOIN users b ON a.foreign_id = b.extension WHERE id = "' . $this->directory . '") v';
+		$vtable = '(SELECT DISTINCT a.id, a.audio, IF(a.name != "",a.name,b.name) name, IF(a.pronunciation != "",a.pronunciation,IF(a.name != "",a.name,b.name)) pronunciation, IF(a.dial != "",a.dial,b.extension) dial FROM directory_entries a LEFT JOIN users b ON a.foreign_id = b.extension WHERE id = "' . $this->directory . '") v';
 		if ($count == 1) {
 			$sql = "SELECT COUNT(*) FROM $vtable WHERE name REGEXP \"(^| ){$this->searchstring}\"";
 			$res = $this->db->getOne($sql);
