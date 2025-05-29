@@ -32,7 +32,7 @@ while($loopcounter1 <= $dir->dir['repeat_loops']){
 				$balance_digit = 3 - $recdig_count;
 				$search = fastpass_get_data_multiple($dir->agi, $dir->dir['announcement'], 3000, $balance_digit);
 				if(strlen($buffer)> 0){
-					$buffer = $buffer.$search;
+					$search = $buffer.$search;
 				}
 				$buffer = '';
 			}
@@ -43,7 +43,7 @@ while($loopcounter1 <= $dir->dir['repeat_loops']){
 		$matches = $dir->search($search,1);
 		$loopcounter2++;
 
-		if (strstr($search['result'],'0') === true) {
+		if (strstr($search,'0') === true) {
 			$dir->$agi->exec('background',$dir->dir['invalid_recording']);
 			$dir->bail();
 			break;
