@@ -137,6 +137,29 @@ class Dir {
 		};
 	}
 
+	private function createWavFile($pcmData, $outputFile, $sampleRate = 8000, $bitsPerSample = 16, $channels = 1) {
+	    $pcmSize = strlen($pcmData);
+	    $headerSize = 44;
+	    $fileSize = $pcmSize + $headerSize;
+	
+	    // WAV header
+	    $header = pack('N', 0x52494646) . // "RIFF"
+	              pack('V', $fileSize - 8) . // File size minus "RIFF" and size fields
+	              pack('N', 0x57415645) . // "WAVE"
+	              pack('N', 0x666d7420) . // "fmt "
+	              pack('V', 16) . // Subchunk1Size
+	              pack('v', 1) . // AudioFormat (PCM)
+	              pack('v', $channels) . // NumChannels
+	              pack('V', $sampleRate) . // SampleRate
+	              pack('V', $sampleRate * $channels * $bitsPerSample / 8) . // ByteRate
+	              pack('v', $channels * $bitsPerSample / 8) . // BlockAlign
+	              pack('v', $bitsPerSample) . // BitsPerSample
+	              pack('N', 0x64617461) . // "data"
+	              pack('V', $pcmSize); // Subchunk2Size
+	
+	    file_put_contents($outputFile, $header . $pcmData);
+	}
+	
 	public function readContact($con, $keys = '#') {
 		$ret = [];
 		switch ($con['audio']) {
@@ -177,6 +200,7 @@ class Dir {
 					//If wav file with matching hash does not exist, delete older/different versions
 					array_map('unlink', glob($temporaryAudioFileOld));
 
+					//Produce a new TTS file from AWS Polly
 					require('/opt/aws-sdk/aws.phar');	//require the AWS SDK to use Polly
 					require('/opt/aws-sdk/cred.php');	//$awsAccessKeyId and $awsSecretKey
 
@@ -187,7 +211,7 @@ class Dir {
 					    'region'      => 'us-east-1',
 					]);
 					$result         = $client->synthesizeSpeech([
-					    'OutputFormat' => 'mp3',
+					    'OutputFormat' => 'pcm',
 					    'SampleRate'   => '8000',
 					    'Text'         => $con['pronunciation'],					
 					    'TextType'     => 'text',
@@ -195,17 +219,8 @@ class Dir {
 					    'Engine'	   => 'neural'
 					]);
 					$resultData     = $result->get('AudioStream')->getContents();
-					file_put_contents($temporaryAudioFile . '.mp3', $resultData);
 
-					//TODO - write output to file and convert it to WAV
-					
-					//Produce a new TTS file from AWS Polly
-					//exec('/usr/bin/node /opt/aws-nodejs/polly.js  --mp3="' . $temporaryAudioFile . '.mp3" --text=' . escapeshellarg($con['pronunciation']) . ' --wav=' . $temporaryAudioFile, $PollyResp, $exitCode);
-					
-					//Delete the MP3 that was produce from Polly (only keeping the WAV file)
-					//if (file_exists($temporaryAudioFile . '.mp3')) {
-					//	unlink($temporaryAudioFile . '.mp3');
-					//}					
+					$this->createWavFile($resultData, $temporaryAudioFile . '.wav');
 				} else {
 					dbug("TTS using existing file: {$temporaryAudioFile}");
 					$exitCode=0;
