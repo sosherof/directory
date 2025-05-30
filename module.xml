@@ -2,7 +2,7 @@
 	<rawname>directory</rawname>
 	<repo>standard</repo>
 	<name>Directory</name>
-	<version>17.0.2.1</version>
+	<version>17.0.2.2</version>
 	<publisher>University of Washington</publisher>
 	<license>GPLv3+</license>
 	<licenselink>https://www.gnu.org/licenses/gpl-3.0.txt</licenselink>
@@ -56,6 +56,7 @@
 	<description>The directory module allows you to create directories of users that can be accessed by callers through modules like the IVR.  This UW version adds a pronunciation fields for TTS and forces use of AWS Polly via the aws.phar SDK.</description>
 	<more-info>https://sangomakb.atlassian.net/wiki/spaces/PG/pages/22446252/PBX+GUI+-+Directory+Module</more-info>
 	<changelog>
+		*17.0.2.2* Change Polly credentials to use the AWS CredentialProvider
 		*17.0.2.1* Version bump
 		*17.0.2.0* Added a field for TTS pronunciation, forced use of AWS Polly
 		*17.0.1.2* #584 Set the Default Directory Option to Include as the Default for New Extensions 
