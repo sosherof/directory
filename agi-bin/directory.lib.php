@@ -1,5 +1,7 @@
 <?php
 include 'phpagi.php';
+require('/opt/aws-sdk/aws.phar');	//require the AWS SDK to use Polly
+require('/opt/aws-sdk/cred.php');	//$awsAccessKeyId and $awsSecretKey
 class Dir {
 	//agi class handler
 	public $agi;
@@ -201,8 +203,6 @@ class Dir {
 					array_map('unlink', glob($temporaryAudioFileOld));
 
 					//Produce a new TTS file from AWS Polly
-					require('/opt/aws-sdk/aws.phar');	//require the AWS SDK to use Polly
-					require('/opt/aws-sdk/cred.php');	//$awsAccessKeyId and $awsSecretKey
 
 					$credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
 					$client         = new \Aws\Polly\PollyClient([
