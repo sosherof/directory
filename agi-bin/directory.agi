@@ -157,6 +157,14 @@ if ($loopcounter1) {
 	$dir->bail();
 }
 
+function log_agi($entry, $level = 1) {
+     global $dir;
+     if (!is_numeric($level)) {
+         $level = 1;
+     }
+     $result = $dir->agi->verbose($entry,$level);
+}
+
 function call($contact){
 	global $dir;
 	$ret = $dir->agi->wait_for_digit(500);
