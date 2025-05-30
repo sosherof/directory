@@ -224,16 +224,13 @@ class Dir {
 					$this->createWavFile($resultData, $temporaryAudioFile . '.wav');
 				} else {
 					log_agi("TTS using existing file: {$temporaryAudioFile}");
-					$exitCode=0;
 				}	
 			
-				//system('flite -t "' . escapeshellarg((string) $con['name']) . '" -o ' . $temporaryAudioFile . '.wav', $exitCode);
-				if (file_exists($temporaryAudioFile . '.wav') && $exitCode === 0) {
+				if (file_exists($temporaryAudioFile . '.wav') ) {
 					log_agi("Playing TTS file: " . $temporaryAudioFile . '.wav');
 					$ret           = $this->agi->stream_file($temporaryAudioFile, $keys);
 					$ret['result'] = isset($ret['result']) ? chr($ret['result']) : NULL;
 					$ret = $ret['result']>0 ? chr($ret['result']) : null;
-					//unlink($temporaryAudioFile . '.wav');
 					break;
 				}
 				else {
