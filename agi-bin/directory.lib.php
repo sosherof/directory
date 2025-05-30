@@ -1,7 +1,7 @@
 <?php
 include 'phpagi.php';
 require('/opt/aws-sdk/aws.phar');	//require the AWS SDK to use Polly
-require('/opt/aws-sdk/cred.php');	//$awsAccessKeyId and $awsSecretKey
+
 class Dir {
 	//agi class handler
 	public $agi;
@@ -197,17 +197,18 @@ class Dir {
 				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}";
 				$temporaryAudioFileOld = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_*";
 				if (!file_exists($temporaryAudioFile . '.wav')) {
-					dbug("TTS making new file: {$temporaryAudioFile}");
+					log_agi("TTS making new file: {$temporaryAudioFile}");
 
 					//If wav file with matching hash does not exist, delete older/different versions
 					array_map('unlink', glob($temporaryAudioFileOld));
 
 					//Produce a new TTS file from AWS Polly
-
-					$credentials    = new \Aws\Credentials\Credentials($awsAccessKeyId, $awsSecretKey);
+					$provider = \Aws\Credentials\CredentialProvider::ini('polly', '/opt/aws-sdk/credentials'); 
+					$provider = \Aws\Credentials\CredentialProvider::memoize($provider);
+					
 					$client         = new \Aws\Polly\PollyClient([
 					    'version'     => '2016-06-10',
-					    'credentials' => $credentials,
+					    'credentials' => $provider,
 					    'region'      => 'us-east-1',
 					]);
 					$result         = $client->synthesizeSpeech([
@@ -222,12 +223,13 @@ class Dir {
 
 					$this->createWavFile($resultData, $temporaryAudioFile . '.wav');
 				} else {
-					dbug("TTS using existing file: {$temporaryAudioFile}");
+					log_agi("TTS using existing file: {$temporaryAudioFile}");
 					$exitCode=0;
 				}	
 			
 				//system('flite -t "' . escapeshellarg((string) $con['name']) . '" -o ' . $temporaryAudioFile . '.wav', $exitCode);
 				if (file_exists($temporaryAudioFile . '.wav') && $exitCode === 0) {
+					log_agi("Playing TTS file: " . $temporaryAudioFile . '.wav');
 					$ret           = $this->agi->stream_file($temporaryAudioFile, $keys);
 					$ret['result'] = isset($ret['result']) ? chr($ret['result']) : NULL;
 					$ret = $ret['result']>0 ? chr($ret['result']) : null;
