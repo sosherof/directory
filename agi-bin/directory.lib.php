@@ -194,7 +194,7 @@ class Dir {
 				//$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . '/tmp/directory-tts-' . time() . random_int(100, 999);
 				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}";
 				$temporaryAudioFileOld = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_*";
-				if (!file_exists($temporaryAudioFile . '.mp3')) {
+				if (!file_exists($temporaryAudioFile . '.wav')) {
 					dbug("TTS making new file: {$temporaryAudioFile}");
 
 					//If wav file with matching hash does not exist, delete older/different versions
@@ -227,7 +227,7 @@ class Dir {
 				}	
 			
 				//system('flite -t "' . escapeshellarg((string) $con['name']) . '" -o ' . $temporaryAudioFile . '.wav', $exitCode);
-				if (file_exists($temporaryAudioFile . '.mp3') && $exitCode === 0) {
+				if (file_exists($temporaryAudioFile . '.wav') && $exitCode === 0) {
 					$ret           = $this->agi->stream_file($temporaryAudioFile, $keys);
 					$ret['result'] = isset($ret['result']) ? chr($ret['result']) : NULL;
 					$ret = $ret['result']>0 ? chr($ret['result']) : null;
