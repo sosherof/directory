@@ -194,7 +194,16 @@ class Dir {
 				$name_hash = md5($con['pronunciation']);					//hash of the name
 				$name_no_spaces = escapeshellcmd(str_replace(' ', '', $con['name']));
 				//$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . '/tmp/directory-tts-' . time() . random_int(100, 999);
-				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}";
+
+				if (file_exists('/opt/aws-sdk/speech.json')) {
+					$speechParms = json_decode(file_get_content('/opt/aws-sdk/speech.json'));	//get voiceID and Engine from file
+					$speechParms['Engine'] = $speechParms['Engine'] ?? 'generative';
+					$speechParms['VoiceId'] = $speechParms['VoiceId'] ?? 'Ruth';
+				} else {
+					$speechParms = ['VoiceId' => 'Ruth', 'Engine' => 'generative'];
+				}
+			
+				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}_{$speechParms['Engine']";
 				$temporaryAudioFileOld = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_*";
 				if (!file_exists($temporaryAudioFile . '.wav')) {
 					log_agi("TTS making new file: {$temporaryAudioFile}");
@@ -205,20 +214,22 @@ class Dir {
 					//Produce a new TTS file from AWS Polly
 					$provider = \Aws\Credentials\CredentialProvider::ini('polly', '/opt/aws-sdk/credentials'); 
 					$provider = \Aws\Credentials\CredentialProvider::memoize($provider);
+
+					$speechParms = array_merge($speechParms, 	//set other values
+						[
+						    'OutputFormat' => 'pcm',
+						    'SampleRate'   => '8000',
+						    'Text'         => $con['pronunciation'],					
+						    'TextType'     => 'text'
+						]);
 					
 					$client         = new \Aws\Polly\PollyClient([
 					    'version'     => '2016-06-10',
 					    'credentials' => $provider,
 					    'region'      => 'us-east-1',
 					]);
-					$result         = $client->synthesizeSpeech([
-					    'OutputFormat' => 'pcm',
-					    'SampleRate'   => '8000',
-					    'Text'         => $con['pronunciation'],					
-					    'TextType'     => 'text',
-					    'VoiceId'      => 'Salli',
-					    'Engine'	   => 'neural'
-					]);
+					
+					$result         = $client->synthesizeSpeech($speechParms);
 					$resultData     = $result->get('AudioStream')->getContents();
 
 					$this->createWavFile($resultData, $temporaryAudioFile . '.wav');
