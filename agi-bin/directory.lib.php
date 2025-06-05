@@ -196,7 +196,7 @@ class Dir {
 				//$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . '/tmp/directory-tts-' . time() . random_int(100, 999);
 
 				if (file_exists('/opt/aws-sdk/speech.json')) {
-					$speechParms = json_decode(file_get_content('/opt/aws-sdk/speech.json'));	//get voiceID and Engine from file
+					$speechParms = json_decode(file_get_contents('/opt/aws-sdk/speech.json'));	//get voiceID and Engine from file
 					$speechParms['Engine'] = $speechParms['Engine'] ?? 'generative';
 					$speechParms['VoiceId'] = $speechParms['VoiceId'] ?? 'Ruth';
 				} else {
