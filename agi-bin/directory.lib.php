@@ -203,7 +203,7 @@ class Dir {
 					$speechParms = ['VoiceId' => 'Ruth', 'Engine' => 'generative'];
 				}
 			
-				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}_{$speechParms['Engine']";
+				$temporaryAudioFile = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_{$name_hash}_{$speechParms['Engine']}";
 				$temporaryAudioFileOld = $this->agi_get_var('ASTSPOOLDIR') . "/tmp/directory-tts_{$con['id']}_{$name_no_spaces}_*";
 				if (!file_exists($temporaryAudioFile . '.wav')) {
 					log_agi("TTS making new file: {$temporaryAudioFile}");
